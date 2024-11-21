@@ -3,64 +3,71 @@ import pandas as pd
 import streamlit as st
 
 # Show the page title and description.
-st.set_page_config(page_title="Movies dataset", page_icon="🎬")
-st.title("🎬 Movies dataset")
+st.set_page_config(page_title="Heart Disease Prediction Dataset", page_icon="🫀")
+st.title("🫀 Heart Disease Prediction Dataset")
 st.write(
     """
-    This app visualizes data from [The Movie Database (TMDB)](https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata).
-    It shows which movie genre performed best at the box office over the years. Just 
-    click on the widgets below to explore!
+    Welcome to the Heart Disease Prediction App! This application provides an interactive and
+    user-friendly platform to explore, analyze, and visualize insights from the Heart Disease Prediction Dataset.
     """
 )
 
-
-# Load the data from a CSV. We're caching this so it doesn't reload every time the app
-# reruns (e.g. if the user interacts with the widgets).
+# Load the dataset
 @st.cache_data
 def load_data():
-    df = pd.read_csv("data/movies_genres_summary.csv")
+    df = pd.read_csv("data/cleaned_merged_heart_dataset.csv")  # Adjust the file path if needed
     return df
 
 
 df = load_data()
 
-# Show a multiselect widget with the genres using `st.multiselect`.
-genres = st.multiselect(
-    "Genres",
-    df.genre.unique(),
-    ["Action", "Adventure", "Biography", "Comedy", "Drama", "Horror"],
+# Display the dataset preview
+st.write("### Dataset Preview")
+st.dataframe(df.head(), use_container_width=True)
+
+# Add multiselect for categorical features
+st.write("### Explore Features")
+selected_features = st.multiselect(
+    "Select Features to Visualize",
+    ["age", "sex", "cp", "trestbps", "chol", "fbs", "restecg", "thalachh", "exang", "oldpeak", "slope", "ca", "thal", "target"],
+    default=["age", "target"]
 )
 
-# Show a slider widget with the years using `st.slider`.
-years = st.slider("Years", 1986, 2006, (2000, 2016))
+# Show a slider widget for filtering age
+age_range = st.slider("Filter by Age", int(df["age"].min()), int(df["age"].max()), (30, 60))
 
-# Filter the dataframe based on the widget input and reshape it.
-df_filtered = df[(df["genre"].isin(genres)) & (df["year"].between(years[0], years[1]))]
-df_reshaped = df_filtered.pivot_table(
-    index="year", columns="genre", values="gross", aggfunc="sum", fill_value=0
-)
-df_reshaped = df_reshaped.sort_values(by="year", ascending=False)
+# Filter the dataframe based on the widget input
+df_filtered = df[(df["age"].between(age_range[0], age_range[1]))]
 
+# Display the filtered data
+st.write(f"### Filtered Data ({len(df_filtered)} rows)")
+st.dataframe(df_filtered[selected_features], use_container_width=True)
 
-# Display the data as a table using `st.dataframe`.
-st.dataframe(
-    df_reshaped,
-    use_container_width=True,
-    column_config={"year": st.column_config.TextColumn("Year")},
-)
-
-# Display the data as an Altair chart using `st.altair_chart`.
-df_chart = pd.melt(
-    df_reshaped.reset_index(), id_vars="year", var_name="genre", value_name="gross"
-)
-chart = (
-    alt.Chart(df_chart)
-    .mark_line()
-    .encode(
-        x=alt.X("year:N", title="Year"),
-        y=alt.Y("gross:Q", title="Gross earnings ($)"),
-        color="genre:N",
+# Visualization
+st.write("### Visualize Relationships")
+if "age" in selected_features and "target" in selected_features:
+    chart = (
+        alt.Chart(df_filtered)
+        .mark_circle(size=60)
+        .encode(
+            x=alt.X("age:Q", title="Age"),
+            y=alt.Y("target:Q", title="Heart Disease Presence (1=Yes, 0=No)"),
+            color="target:N",
+            tooltip=["age", "target", "chol", "thalachh"]
+        )
+        .interactive()
     )
-    .properties(height=320)
+    st.altair_chart(chart, use_container_width=True)
+
+# Additional Insights
+st.write("### Summary Statistics")
+st.write(df_filtered.describe())
+
+# Add a note about the target feature
+st.markdown(
+    """
+    **Note:**  
+    - `target`: Indicates the presence of heart disease (1 = Disease, 0 = No Disease).  
+    - Use the visualizations and statistics to explore correlations and trends in the data.
+    """
 )
-st.altair_chart(chart, use_container_width=True)
