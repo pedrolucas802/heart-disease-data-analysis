@@ -1,6 +1,6 @@
-# 🎬 Movies dataset template
+# 🫀 Heart Disease Prediction App
 
-A simple Streamlit app showing movie data from [The Movie Database (TMDB)](https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata). 
+Dataset: https://www.kaggle.com/datasets/mfarhaannazirkhan/heart-dataset
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://movies-dataset-template.streamlit.app/)
 
