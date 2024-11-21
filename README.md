@@ -15,5 +15,5 @@ Dataset: https://www.kaggle.com/datasets/mfarhaannazirkhan/heart-dataset
 2. Run the app
 
    ```
-   $ streamlit run streamlit_app.py
+   $ streamlit run Home.py
    ```
