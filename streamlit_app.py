@@ -14,6 +14,27 @@ st.write("Explore padrões e insights sobre fatores de risco cardíacos")
 @st.cache_data
 def load_data():
     df = pd.read_csv("data/cleaned_merged_heart_dataset.csv")
+
+    # Mapeia os valores categóricos para suas descrições
+    df["sex"] = df["sex"].map({0: "Mulher", 1: "Homem"})
+    df["cp"] = df["cp"].map(
+        {
+            0: "Angina típica",
+            1: "Angina atípica",
+            2: "Dor não anginal",
+            3: "Assintomático",
+        }
+    )
+    df["fbs"] = df["fbs"].map({0: "Falso", 1: "Verdadeiro"})
+    df["restecg"] = df["restecg"].map(
+        {0: "Normal", 1: "Anormalidade ST-T", 2: "Hipertrofia ventricular esquerda"}
+    )
+    df["exang"] = df["exang"].map({0: "Não", 1: "Sim"})
+    df["slope"] = df["slope"].map({0: "Ascendente", 1: "Plano", 2: "Descendente"})
+    df["thal"] = df["thal"].map(
+        {1: "Normal", 2: "Defeito fixo", 3: "Defeito reversível"}
+    )
+    df["target"] = df["target"].map({0: "Menor risco", 1: "Maior risco"})
     return df
 
 
@@ -28,19 +49,19 @@ with col1:
     st.metric("Média de Idade", f"{df['age'].mean():.1f} anos")
 
 with col2:
-    male_count = df[df["sex"] == 1].shape[0]
-    female_count = df[df["sex"] == 0].shape[0]
+    male_count = df[df["sex"] == "Homem"].shape[0]
+    female_count = df[df["sex"] == "Mulher"].shape[0]
     st.metric("Proporção Homens/Mulheres", f"{male_count}/{female_count}")
 
 with col3:
-    risk_positive = (df["target"] == 1).mean() * 100
-    st.metric("Risco de Ataque Cardíaco", f"{risk_positive:.1f}% com risco")
+    risk_positive = (df["target"] == "Maior risco").mean() * 100
+    st.metric("Risco de Ataque Cardíaco", f"{risk_positive:.1f}% com maior risco")
 
 with col4:
     st.metric("Média de Colesterol", f"{df['chol'].mean():.1f} mg/dL")
 
 with col5:
-    high_fbs = (df["fbs"] == 1).mean() * 100
+    high_fbs = (df["fbs"] == "Verdadeiro").mean() * 100
     st.metric("Taxa de Açúcar Elevado", f"{high_fbs:.1f}%")
 
 # Seção: Análise de Fatores de Risco
@@ -55,9 +76,9 @@ with col1:
         alt.Chart(df)
         .mark_bar()
         .encode(
-            x="sex:N",
-            y="count():Q",
-            color="target:N",
+            x=alt.X("sex:N", title="Gênero"),
+            y=alt.Y("count():Q", title="Número de Pacientes"),
+            color=alt.Color("target:N", title="Risco de Ataque Cardíaco"),
             tooltip=["sex", "count()", "target"],
         )
         .properties(title="Distribuição de Risco por Gênero")
@@ -68,7 +89,12 @@ with col2:
     box_chart = (
         alt.Chart(df)
         .mark_boxplot()
-        .encode(x="target:N", y="age:Q", color="target:N", tooltip=["age", "target"])
+        .encode(
+            x=alt.X("target:N", title="Risco de Ataque Cardíaco"),
+            y=alt.Y("age:Q", title="Idade"),
+            color=alt.Color("target:N", title="Risco"),
+            tooltip=["age", "target"],
+        )
         .properties(title="Faixa Etária por Risco de Ataque Cardíaco")
     )
     st.altair_chart(box_chart, use_container_width=True)
@@ -79,7 +105,10 @@ cp_chart = (
     alt.Chart(df)
     .mark_bar()
     .encode(
-        x="cp:N", y="count():Q", color="target:N", tooltip=["cp", "count()", "target"]
+        x=alt.X("cp:N", title="Tipo de Dor no Peito"),
+        y=alt.Y("count():Q", title="Número de Pacientes"),
+        color=alt.Color("target:N", title="Risco de Ataque Cardíaco"),
+        tooltip=["cp", "count()", "target"],
     )
     .properties(title="Tipos de Dor no Peito vs. Risco de Ataque Cardíaco")
 )
@@ -91,9 +120,9 @@ scatter_chart = (
     alt.Chart(df)
     .mark_circle(size=60)
     .encode(
-        x="trestbps:Q",
-        y="chol:Q",
-        color="target:N",
+        x=alt.X("trestbps:Q", title="Pressão Sanguínea em Repouso (mm Hg)"),
+        y=alt.Y("chol:Q", title="Colesterol Sérico (mg/dL)"),
+        color=alt.Color("target:N", title="Risco de Ataque Cardíaco"),
         tooltip=["trestbps", "chol", "target"],
     )
     .properties(title="Relação entre Pressão Sanguínea e Colesterol")
@@ -106,10 +135,10 @@ hist_chart = (
     alt.Chart(df)
     .mark_bar()
     .encode(
-        x=alt.X("thalachh:Q", bin=True),
-        y="count():Q",
-        color="target:N",
-        tooltip=["thalachh", "count()", "target"],
+        x=alt.X("thalach:Q", bin=True, title="Frequência Cardíaca Máxima (bpm)"),
+        y=alt.Y("count():Q", title="Número de Pacientes"),
+        color=alt.Color("target:N", title="Risco de Ataque Cardíaco"),
+        tooltip=["thalach", "count()", "target"],
     )
     .properties(title="Distribuição de Frequência Cardíaca por Categoria de Risco")
 )
@@ -121,9 +150,9 @@ exang_ecg_chart = (
     alt.Chart(df)
     .mark_bar()
     .encode(
-        x="restecg:N",
-        y="count():Q",
-        color="exang:N",
+        x=alt.X("restecg:N", title="Resultados do ECG em Repouso"),
+        y=alt.Y("count():Q", title="Número de Pacientes"),
+        color=alt.Color("exang:N", title="Angina Induzida por Exercício"),
         tooltip=["restecg", "count()", "exang"],
     )
     .properties(title="Distribuição de ECG e Exercício por Risco")
@@ -139,9 +168,9 @@ heatmap = (
     alt.Chart(df)
     .mark_rect()
     .encode(
-        x="slope:N",
-        y="oldpeak:Q",
-        color="target:N",
+        x=alt.X("slope:N", title="Inclinação do Segmento ST"),
+        y=alt.Y("oldpeak:Q", title="Depressão do Segmento ST"),
+        color=alt.Color("target:N", title="Risco de Ataque Cardíaco"),
         tooltip=["slope", "oldpeak", "target"],
     )
     .properties(title="Heatmap: Slope vs Oldpeak vs Risco")
@@ -154,9 +183,9 @@ thal_chart = (
     alt.Chart(df)
     .mark_bar()
     .encode(
-        x="thal:N",
-        y="count():Q",
-        color="target:N",
+        x=alt.X("thal:N", title="Tipo de Thalassemia"),
+        y=alt.Y("count():Q", title="Número de Pacientes"),
+        color=alt.Color("target:N", title="Risco de Ataque Cardíaco"),
         tooltip=["thal", "count()", "target"],
     )
     .properties(title="Distribuição de Thalassemia por Categoria de Risco")
@@ -169,8 +198,11 @@ scatter_vessels = (
     alt.Chart(df)
     .mark_circle(size=60)
     .encode(
-        x="ca:Q", y="oldpeak:Q", color="target:N", tooltip=["ca", "oldpeak", "target"]
+        x=alt.X("ca:Q", title="Número de Vasos Principais"),
+        y=alt.Y("oldpeak:Q", title="Depressão do Segmento ST"),
+        color=alt.Color("target:N", title="Risco de Ataque Cardíaco"),
+        tooltip=["ca", "oldpeak", "target"],
     )
-    .properties(title="Relação entre Vasos, Oldpeak e Risco")
+    .properties(title="Relação entre Número de Vasos e Depressão do Segmento ST")
 )
 st.altair_chart(scatter_vessels, use_container_width=True)
