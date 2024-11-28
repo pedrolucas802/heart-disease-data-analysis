@@ -2,11 +2,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-# Função para carregar os dados
-@st.cache_data
-def load_data():
-    return pd.read_csv("data/cleaned_merged_heart_dataset.csv")
-
+from streamlit_app import load_data
 
 # Carregar os dados
 df = load_data()
