@@ -2,7 +2,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from Inicio import load_data
+from streamlit_app import load_data
 
 # Carregar dataset
 df = load_data()
