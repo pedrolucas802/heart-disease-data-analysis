@@ -2,7 +2,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from streamlit_app import load_data
+from Inicio import load_data
 
 # Carregar dataset
 df = load_data()
